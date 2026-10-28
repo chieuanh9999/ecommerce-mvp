@@ -1,0 +1,90 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  roleid   Int    @id @default(autoincrement())
+  rolename String @unique
+
+  users User[]
+}
+
+model MemberShip {
+  mid        Int    @id @default(autoincrement())
+  membership String
+  point      Int    @default(0)
+
+  users User[]
+}
+
+model User {
+  uid      Int      @id @default(autoincrement())
+  username String   @unique
+  password String
+  fullname String
+  email    String   @unique
+  address  String?
+  phone    String?
+  roleid   Int
+  mid      Int
+  createdAt DateTime @default(now())
+
+  role      Role       @relation(fields: [roleid], references: [roleid])
+  memberShip MemberShip @relation(fields: [mid], references: [mid])
+  orders    Order[]
+}
+
+model Product {
+  pid         Int      @id @default(autoincrement())
+  pname       String
+  price       Decimal  @db.Decimal(12, 2)
+  quantity    Int      @default(0)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderDetails OrderDetail[]
+}
+
+model Order {
+  oid       Int      @id @default(autoincrement())
+  uid       Int
+  orderDate DateTime @default(now())
+  status    String   @default("PENDING")
+  total     Decimal  @db.Decimal(12, 2)
+
+  user         User          @relation(fields: [uid], references: [uid])
+  orderDetails OrderDetail[]
+  shipments    Shipment[]
+}
+
+model OrderDetail {
+  oid      Int
+  pid      Int
+  quantity Int
+  price    Decimal @db.Decimal(12, 2)
+
+  order   Order   @relation(fields: [oid], references: [oid], onDelete: Cascade)
+  product Product @relation(fields: [pid], references: [pid])
+
+  @@id([oid, pid])
+}
+
+model Shipment {
+  sid           Int      @id @default(autoincrement())
+  oid           Int
+  recipientName String
+  address       String
+  phone         String
+  status        String   @default("PENDING")
+  shippedAt     DateTime?
+  deliveredAt   DateTime?
+
+  order Order @relation(fields: [oid], references: [oid], onDelete: Cascade)
+}
