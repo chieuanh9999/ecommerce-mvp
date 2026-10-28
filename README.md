@@ -128,3 +128,23 @@ PUT  /api/shipments/:id
 
 Dự án được xây dựng nhằm phục vụ bài thực hành
 PROMPT 2 - Monolithic, môn Lập trình hướng dịch vụ.
+
+## 11. Khởi tạo dữ liệu ban đầu
+
+Sau khi chạy Docker Compose, thực hiện:
+
+```bash
+docker compose exec api node src/seed.js
+```
+
+Lệnh này tạo các vai trò ADMIN, CUSTOMER
+và hạng thành viên BASIC.
+
+Để tạo tài khoản ADMIN dùng cho thực hành:
+
+```bash
+docker compose exec api node src/create-admin.js
+```
+
+Lưu mật khẩu ADMIN được hiển thị tại nơi an toàn.
+Không chia sẻ mật khẩu hoặc JWT Token.
