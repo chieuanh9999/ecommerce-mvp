@@ -105,7 +105,9 @@ const createOrder = async (req, res) => {
       }
 
       // 4. Tạo Order và OrderDetail
-      return tx.order.create({
+      
+      // 4. Tạo Order và OrderDetail
+      const newOrder = await tx.order.create({
         data: {
           user: {
             connect: { uid: req.user.uid }
@@ -126,6 +128,42 @@ const createOrder = async (req, res) => {
           orderDetails: true
         }
       });
+
+      // 5. Lấy thông tin giao hàng từ CUSTOMER
+      const customer = await tx.user.findUnique({
+        where: { uid: req.user.uid },
+        select: {
+          fullname: true,
+          address: true,
+          phone: true
+        }
+      });
+
+      if (
+        !customer?.fullname?.trim() ||
+        !customer?.address?.trim() ||
+        !customer?.phone?.trim()
+      ) {
+        const error = new Error(
+          "Tài khoản chưa đủ thông tin giao hàng"
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      // 6. Tự động tạo Shipment
+      await tx.shipment.create({
+        data: {
+          oid: newOrder.oid,
+          recipientName: customer.fullname.trim(),
+          address: customer.address.trim(),
+          phone: customer.phone.trim(),
+          status: "PENDING"
+        }
+      });
+
+      return newOrder;
+
     });
 
     return res.status(201).json({
